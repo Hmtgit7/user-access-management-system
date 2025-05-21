@@ -1,4 +1,4 @@
-// backend/src/entities/Request.ts
+// src/entities/Request.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -50,8 +50,9 @@ export class Request {
   @Column({ type: "timestamp", nullable: true })
   updatedAt: Date;
 
+  // Change the type to allow null
   @Column({ nullable: true })
-  reviewedBy: number;
+  reviewedBy: number | null;
 
   @Column({ type: "text", nullable: true })
   reviewComment: string;

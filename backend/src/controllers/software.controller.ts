@@ -1,21 +1,27 @@
-// backend/src/controllers/software.controller.ts
+// src/controllers/software.controller.ts
 import { Request, Response } from "express";
 import { getRepository } from "typeorm";
 import { Software } from "../entities/Software";
 
-export const getAllSoftware = async (req: Request, res: Response) => {
+export const getAllSoftware = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const softwareRepository = getRepository(Software);
     const softwareList = await softwareRepository.find();
 
-    return res.status(200).json({ software: softwareList });
+    res.status(200).json({ software: softwareList });
   } catch (error) {
     console.error("Get all software error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const getSoftwareById = async (req: Request, res: Response) => {
+export const getSoftwareById = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const softwareRepository = getRepository(Software);
@@ -25,17 +31,21 @@ export const getSoftwareById = async (req: Request, res: Response) => {
     });
 
     if (!software) {
-      return res.status(404).json({ message: "Software not found" });
+      res.status(404).json({ message: "Software not found" });
+      return;
     }
 
-    return res.status(200).json({ software });
+    res.status(200).json({ software });
   } catch (error) {
     console.error("Get software by id error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const createSoftware = async (req: Request, res: Response) => {
+export const createSoftware = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { name, description, accessLevels } = req.body;
 
@@ -45,9 +55,10 @@ export const createSoftware = async (req: Request, res: Response) => {
       !accessLevels ||
       !Array.isArray(accessLevels)
     ) {
-      return res
+      res
         .status(400)
         .json({ message: "Name, description, and accessLevels are required" });
+      return;
     }
 
     // Validate access levels
@@ -57,9 +68,10 @@ export const createSoftware = async (req: Request, res: Response) => {
     );
 
     if (!isValidAccessLevels) {
-      return res
+      res
         .status(400)
         .json({ message: "Access levels must be one of: Read, Write, Admin" });
+      return;
     }
 
     const softwareRepository = getRepository(Software);
@@ -69,9 +81,10 @@ export const createSoftware = async (req: Request, res: Response) => {
       where: { name },
     });
     if (existingSoftware) {
-      return res
+      res
         .status(409)
         .json({ message: "Software with this name already exists" });
+      return;
     }
 
     // Create new software
@@ -83,17 +96,20 @@ export const createSoftware = async (req: Request, res: Response) => {
 
     await softwareRepository.save(newSoftware);
 
-    return res.status(201).json({
+    res.status(201).json({
       message: "Software created successfully",
       software: newSoftware,
     });
   } catch (error) {
     console.error("Create software error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const updateSoftware = async (req: Request, res: Response) => {
+export const updateSoftware = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const { name, description, accessLevels } = req.body;
@@ -106,7 +122,8 @@ export const updateSoftware = async (req: Request, res: Response) => {
     });
 
     if (!software) {
-      return res.status(404).json({ message: "Software not found" });
+      res.status(404).json({ message: "Software not found" });
+      return;
     }
 
     // Update software properties
@@ -120,11 +137,10 @@ export const updateSoftware = async (req: Request, res: Response) => {
       );
 
       if (!isValidAccessLevels) {
-        return res
-          .status(400)
-          .json({
-            message: "Access levels must be one of: Read, Write, Admin",
-          });
+        res.status(400).json({
+          message: "Access levels must be one of: Read, Write, Admin",
+        });
+        return;
       }
 
       software.accessLevels = accessLevels;
@@ -132,17 +148,20 @@ export const updateSoftware = async (req: Request, res: Response) => {
 
     await softwareRepository.save(software);
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Software updated successfully",
       software,
     });
   } catch (error) {
     console.error("Update software error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const deleteSoftware = async (req: Request, res: Response) => {
+export const deleteSoftware = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const softwareRepository = getRepository(Software);
@@ -153,14 +172,15 @@ export const deleteSoftware = async (req: Request, res: Response) => {
     });
 
     if (!software) {
-      return res.status(404).json({ message: "Software not found" });
+      res.status(404).json({ message: "Software not found" });
+      return;
     }
 
     await softwareRepository.remove(software);
 
-    return res.status(200).json({ message: "Software deleted successfully" });
+    res.status(200).json({ message: "Software deleted successfully" });
   } catch (error) {
     console.error("Delete software error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };

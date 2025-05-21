@@ -1,4 +1,4 @@
-// backend/src/routes/auth.routes.ts
+// src/routes/auth.routes.ts
 import { Router } from "express";
 import { signup, login, getCurrentUser } from "../controllers/auth.controller";
 import { authMiddleware } from "../middleware/auth.middleware";

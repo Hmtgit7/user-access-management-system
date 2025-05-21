@@ -14,20 +14,20 @@ export const authMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): void => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-      return res
-        .status(401)
-        .json({ message: "No authorization header provided" });
+      res.status(401).json({ message: "No authorization header provided" });
+      return;
     }
 
     const token = authHeader.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({ message: "No token provided" });
+      res.status(401).json({ message: "No token provided" });
+      return;
     }
 
     const decodedToken = verifyToken(token);
@@ -35,6 +35,7 @@ export const authMiddleware = (
 
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    res.status(401).json({ message: "Invalid or expired token" });
+    return;
   }
 };

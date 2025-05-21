@@ -1,27 +1,32 @@
-// backend/src/controllers/request.controller.ts
+// src/controllers/request.controller.ts
 import { Request, Response } from "express";
 import { getRepository } from "typeorm";
 import { Request as AccessRequest } from "../entities/Request";
 import { Software } from "../entities/Software";
 import { User } from "../entities/User";
 
-export const createRequest = async (req: Request, res: Response) => {
+export const createRequest = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { softwareId, accessType, reason } = req.body;
     const userId = req.user?.userId;
 
     if (!softwareId || !accessType || !reason) {
-      return res
+      res
         .status(400)
         .json({ message: "Software ID, access type, and reason are required" });
+      return;
     }
 
     // Validate access type
     const validAccessTypes = ["Read", "Write", "Admin"];
     if (!validAccessTypes.includes(accessType)) {
-      return res
+      res
         .status(400)
         .json({ message: "Access type must be one of: Read, Write, Admin" });
+      return;
     }
 
     const softwareRepository = getRepository(Software);
@@ -33,22 +38,25 @@ export const createRequest = async (req: Request, res: Response) => {
       where: { id: softwareId },
     });
     if (!software) {
-      return res.status(404).json({ message: "Software not found" });
+      res.status(404).json({ message: "Software not found" });
+      return;
     }
 
     // Check if software supports requested access level
     if (!software.accessLevels.includes(accessType)) {
-      return res
+      res
         .status(400)
         .json({
           message: `Software does not support ${accessType} access level`,
         });
+      return;
     }
 
     // Check if user exists
     const user = await userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
     // Check for existing pending request
@@ -62,9 +70,8 @@ export const createRequest = async (req: Request, res: Response) => {
     });
 
     if (existingRequest) {
-      return res
-        .status(409)
-        .json({ message: "A similar request is already pending" });
+      res.status(409).json({ message: "A similar request is already pending" });
+      return;
     }
 
     // Create new request
@@ -78,17 +85,20 @@ export const createRequest = async (req: Request, res: Response) => {
 
     await requestRepository.save(newRequest);
 
-    return res.status(201).json({
+    res.status(201).json({
       message: "Request submitted successfully",
       request: newRequest,
     });
   } catch (error) {
     console.error("Create request error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const getUserRequests = async (req: Request, res: Response) => {
+export const getUserRequests = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const userId = req.user?.userId;
     const requestRepository = getRepository(AccessRequest);
@@ -98,14 +108,17 @@ export const getUserRequests = async (req: Request, res: Response) => {
       relations: ["software"],
     });
 
-    return res.status(200).json({ requests });
+    res.status(200).json({ requests });
   } catch (error) {
     console.error("Get user requests error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const getPendingRequests = async (req: Request, res: Response) => {
+export const getPendingRequests = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const requestRepository = getRepository(AccessRequest);
 
@@ -129,14 +142,17 @@ export const getPendingRequests = async (req: Request, res: Response) => {
       };
     });
 
-    return res.status(200).json({ requests: sanitizedRequests });
+    res.status(200).json({ requests: sanitizedRequests });
   } catch (error) {
     console.error("Get pending requests error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const getRequestById = async (req: Request, res: Response) => {
+export const getRequestById = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const requestRepository = getRepository(AccessRequest);
@@ -147,20 +163,22 @@ export const getRequestById = async (req: Request, res: Response) => {
     });
 
     if (!request) {
-      return res.status(404).json({ message: "Request not found" });
+      res.status(404).json({ message: "Request not found" });
+      return;
     }
 
     // Check if user is authorized to view this request
     const currentUserId = req.user?.userId;
     const currentUserRole = req.user?.role;
 
+    // Add null check for currentUserRole
     if (
       request.userId !== currentUserId &&
+      currentUserRole &&
       !["Manager", "Admin"].includes(currentUserRole)
     ) {
-      return res
-        .status(403)
-        .json({ message: "Unauthorized to view this request" });
+      res.status(403).json({ message: "Unauthorized to view this request" });
+      return;
     }
 
     // Remove sensitive information from user object
@@ -176,23 +194,27 @@ export const getRequestById = async (req: Request, res: Response) => {
       },
     };
 
-    return res.status(200).json({ request: sanitizedRequest });
+    res.status(200).json({ request: sanitizedRequest });
   } catch (error) {
     console.error("Get request by ID error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const updateRequestStatus = async (req: Request, res: Response) => {
+export const updateRequestStatus = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const { status, reviewComment } = req.body;
     const reviewerId = req.user?.userId;
 
     if (!status || !["Approved", "Rejected"].includes(status)) {
-      return res
+      res
         .status(400)
         .json({ message: "Valid status (Approved/Rejected) is required" });
+      return;
     }
 
     const requestRepository = getRepository(AccessRequest);
@@ -204,24 +226,25 @@ export const updateRequestStatus = async (req: Request, res: Response) => {
     });
 
     if (!request) {
-      return res.status(404).json({ message: "Request not found" });
+      res.status(404).json({ message: "Request not found" });
+      return;
     }
 
     if (request.status !== "Pending") {
-      return res
-        .status(400)
-        .json({ message: "Request has already been processed" });
+      res.status(400).json({ message: "Request has already been processed" });
+      return;
     }
 
     // Update request
     request.status = status;
-    request.reviewedBy = reviewerId;
+    // Use null for reviewerId if it's undefined
+    request.reviewedBy = reviewerId || null;
     request.reviewComment = reviewComment || null;
     request.updatedAt = new Date();
 
     await requestRepository.save(request);
 
-    return res.status(200).json({
+    res.status(200).json({
       message: `Request ${status.toLowerCase()} successfully`,
       request: {
         id: request.id,
@@ -239,6 +262,6 @@ export const updateRequestStatus = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Update request status error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };

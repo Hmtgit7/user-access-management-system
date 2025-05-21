@@ -1,4 +1,4 @@
-// backend/src/routes/software.routes.ts
+// src/routes/software.routes.ts
 import { Router } from "express";
 import {
   getAllSoftware,

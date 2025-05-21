@@ -1,18 +1,17 @@
-// backend/src/controllers/auth.controller.ts
+// src/controllers/auth.controller.ts
 import { Request, Response } from "express";
 import { getRepository } from "typeorm";
 import bcrypt from "bcrypt";
 import { User } from "../entities/User";
 import { generateToken } from "../utils/jwt";
 
-export const signup = async (req: Request, res: Response) => {
+export const signup = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, password, email, fullName, role = "Employee" } = req.body;
 
     if (!username || !password) {
-      return res
-        .status(400)
-        .json({ message: "Username and password are required" });
+      res.status(400).json({ message: "Username and password are required" });
+      return;
     }
 
     const userRepository = getRepository(User);
@@ -20,7 +19,8 @@ export const signup = async (req: Request, res: Response) => {
     // Check if user already exists
     const existingUser = await userRepository.findOne({ where: { username } });
     if (existingUser) {
-      return res.status(409).json({ message: "Username already exists" });
+      res.status(409).json({ message: "Username already exists" });
+      return;
     }
 
     // Hash password
@@ -44,7 +44,7 @@ export const signup = async (req: Request, res: Response) => {
       role: newUser.role,
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       message: "User created successfully",
       token,
       user: {
@@ -57,18 +57,17 @@ export const signup = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Signup error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res
-        .status(400)
-        .json({ message: "Username and password are required" });
+      res.status(400).json({ message: "Username and password are required" });
+      return;
     }
 
     const userRepository = getRepository(User);
@@ -76,13 +75,15 @@ export const login = async (req: Request, res: Response) => {
     // Find user by username
     const user = await userRepository.findOne({ where: { username } });
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      res.status(401).json({ message: "Invalid credentials" });
+      return;
     }
 
     // Validate password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      res.status(401).json({ message: "Invalid credentials" });
+      return;
     }
 
     // Generate JWT token
@@ -92,7 +93,7 @@ export const login = async (req: Request, res: Response) => {
       role: user.role,
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Login successful",
       token,
       user: {
@@ -105,14 +106,18 @@ export const login = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const getCurrentUser = async (req: Request, res: Response) => {
+export const getCurrentUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
 
     const userRepository = getRepository(User);
@@ -121,10 +126,11 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       user: {
         id: user.id,
         username: user.username,
@@ -135,6 +141,6 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Get current user error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
