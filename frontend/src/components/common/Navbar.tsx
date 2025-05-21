@@ -17,7 +17,6 @@ import {
     AccountCircle,
     Menu as MenuIcon,
     Dashboard,
-    Apps,
     Add,
     ExitToApp,
     Assignment,
