@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Typography,
-  Grid,
   Card,
   CardContent,
   Box,
@@ -86,59 +85,54 @@ const DashboardPage: React.FC = () => {
           {error}
         </Box>
       ) : (
-        <Grid container spacing={4}>
+        <div className="space-y-4">
           {/* Status Summary Cards */}
-          <Grid item xs={12}>
+          <div className="w-full">
             <Typography variant="h6" className="mb-3">
               Your Access Requests
             </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6} md={4}>
-                <Card className="bg-blue-50 h-full">
-                  <CardContent className="flex flex-col items-center p-6">
-                    <Pending className="text-blue-600 text-4xl mb-2" />
-                    <Typography variant="h5" className="font-bold text-blue-800">
-                      {pendingCount}
-                    </Typography>
-                    <Typography variant="body1" className="text-blue-700">
-                      Pending Requests
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              <Card className="bg-blue-50 h-full">
+                <CardContent className="flex flex-col items-center p-6">
+                  <Pending className="text-blue-600 text-4xl mb-2" />
+                  <Typography variant="h5" className="font-bold text-blue-800">
+                    {pendingCount}
+                  </Typography>
+                  <Typography variant="body1" className="text-blue-700">
+                    Pending Requests
+                  </Typography>
+                </CardContent>
+              </Card>
 
-              <Grid item xs={12} sm={6} md={4}>
-                <Card className="bg-green-50 h-full">
-                  <CardContent className="flex flex-col items-center p-6">
-                    <CheckCircle className="text-green-600 text-4xl mb-2" />
-                    <Typography variant="h5" className="font-bold text-green-800">
-                      {approvedCount}
-                    </Typography>
-                    <Typography variant="body1" className="text-green-700">
-                      Approved Requests
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+              <Card className="bg-green-50 h-full">
+                <CardContent className="flex flex-col items-center p-6">
+                  <CheckCircle className="text-green-600 text-4xl mb-2" />
+                  <Typography variant="h5" className="font-bold text-green-800">
+                    {approvedCount}
+                  </Typography>
+                  <Typography variant="body1" className="text-green-700">
+                    Approved Requests
+                  </Typography>
+                </CardContent>
+              </Card>
 
-              <Grid item xs={12} sm={6} md={4}>
-                <Card className="bg-red-50 h-full">
-                  <CardContent className="flex flex-col items-center p-6">
-                    <Cancel className="text-red-600 text-4xl mb-2" />
-                    <Typography variant="h5" className="font-bold text-red-800">
-                      {rejectedCount}
-                    </Typography>
-                    <Typography variant="body1" className="text-red-700">
-                      Rejected Requests
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </Grid>
+              <Card className="bg-red-50 h-full">
+                <CardContent className="flex flex-col items-center p-6">
+                  <Cancel className="text-red-600 text-4xl mb-2" />
+                  <Typography variant="h5" className="font-bold text-red-800">
+                    {rejectedCount}
+                  </Typography>
+                  <Typography variant="body1" className="text-red-700">
+                    Rejected Requests
+                  </Typography>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
-          {/* Recent Requests */}
-          <Grid item xs={12} md={6}>
+          {/* Main content area with two columns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Recent Requests */}
             <Card className="h-full">
               <CardContent>
                 <Box className="flex justify-between items-center mb-4">
@@ -211,10 +205,8 @@ const DashboardPage: React.FC = () => {
                 )}
               </CardContent>
             </Card>
-          </Grid>
 
-          {/* Available Software */}
-          <Grid item xs={12} md={6}>
+            {/* Available Software */}
             <Card className="h-full">
               <CardContent>
                 <Box className="flex justify-between items-center mb-4">
@@ -294,61 +286,55 @@ const DashboardPage: React.FC = () => {
                 )}
               </CardContent>
             </Card>
-          </Grid>
+          </div>
 
           {/* Quick Actions */}
-          <Grid item xs={12}>
+          <div className="w-full">
             <Box className="bg-gray-50 rounded-lg p-4">
               <Typography variant="h6" className="mb-3">
                 Quick Actions
               </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                <Button
+                  variant="contained"
+                  fullWidth
+                  component={Link}
+                  to="/request-access"
+                  className="py-3 bg-blue-600 hover:bg-blue-700"
+                  startIcon={<Assignment />}
+                >
+                  New Access Request
+                </Button>
+
+                {isManager && (
                   <Button
                     variant="contained"
                     fullWidth
                     component={Link}
-                    to="/request-access"
-                    className="py-3 bg-blue-600 hover:bg-blue-700"
-                    startIcon={<Assignment />}
+                    to="/pending-requests"
+                    className="py-3 bg-green-600 hover:bg-green-700"
+                    startIcon={<CheckCircle />}
                   >
-                    New Access Request
+                    Review Requests
                   </Button>
-                </Grid>
-
-                {isManager && (
-                  <Grid item xs={12} sm={6} md={4} lg={3}>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      component={Link}
-                      to="/pending-requests"
-                      className="py-3 bg-green-600 hover:bg-green-700"
-                      startIcon={<CheckCircle />}
-                    >
-                      Review Requests
-                    </Button>
-                  </Grid>
                 )}
 
                 {isAdmin && (
-                  <Grid item xs={12} sm={6} md={4} lg={3}>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      component={Link}
-                      to="/create-software"
-                      className="py-3 bg-purple-600 hover:bg-purple-700"
-                      startIcon={<Add />}
-                    >
-                      Add New Software
-                    </Button>
-                  </Grid>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    component={Link}
+                    to="/create-software"
+                    className="py-3 bg-purple-600 hover:bg-purple-700"
+                    startIcon={<Add />}
+                  >
+                    Add New Software
+                  </Button>
                 )}
-              </Grid>
+              </div>
             </Box>
-          </Grid>
-        </Grid>
+          </div>
+        </div>
       )}
     </MainLayout>
   );

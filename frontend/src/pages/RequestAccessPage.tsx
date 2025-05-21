@@ -19,7 +19,6 @@ import {
     LinearProgress,
     Card,
     CardContent,
-    Grid,
     Chip,
     SelectChangeEvent
 } from '@mui/material';
@@ -153,8 +152,8 @@ const RequestAccessPage: React.FC = () => {
                             No software is currently available in the system.
                         </Alert>
                     ) : (
-                        <Grid container spacing={4}>
-                            <Grid item xs={12} md={8}>
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                            <div className="md:col-span-8">
                                 <Paper elevation={2} className="p-6">
                                     <form onSubmit={formik.handleSubmit}>
                                         <FormControl
@@ -260,9 +259,9 @@ const RequestAccessPage: React.FC = () => {
                                         </Box>
                                     </form>
                                 </Paper>
-                            </Grid>
+                            </div>
 
-                            <Grid item xs={12} md={4}>
+                            <div className="md:col-span-4">
                                 {selectedSoftware ? (
                                     <Card>
                                         <CardContent>
@@ -301,8 +300,8 @@ const RequestAccessPage: React.FC = () => {
                                         </CardContent>
                                     </Card>
                                 )}
-                            </Grid>
-                        </Grid>
+                            </div>
+                        </div>
                     )}
                 </>
             )}
