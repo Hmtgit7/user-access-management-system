@@ -1,14 +1,57 @@
 # User Access Management System - Backend
 
-This is the backend server for the User Access Management System, built with Node.js, Express, TypeScript, and TypeORM.
+This is the backend API server for the User Access Management System. It provides endpoints for user authentication, software management, and request handling with role-based access control.
 
-## Prerequisites
+## Technology Stack
+
+- **Framework**: Node.js with Express.js
+- **Language**: TypeScript
+- **Database**: PostgreSQL
+- **ORM**: TypeORM
+- **Authentication**: JWT (JSON Web Tokens)
+- **Additional Tools**: bcrypt (password hashing), dotenv, cors
+
+## Project Structure
+
+```
+backend/
+├── src/
+│   ├── controllers/      # Request handlers
+│   │   ├── auth.controller.ts
+│   │   ├── software.controller.ts
+│   │   └── request.controller.ts
+│   ├── entities/         # TypeORM entities
+│   │   ├── User.ts
+│   │   ├── Software.ts
+│   │   └── Request.ts
+│   ├── middleware/       # Auth middleware, role validation
+│   │   ├── auth.middleware.ts
+│   │   └── role.middleware.ts
+│   ├── routes/           # API routes
+│   │   ├── auth.routes.ts
+│   │   ├── software.routes.ts
+│   │   └── request.routes.ts
+│   ├── config/           # Configuration files
+│   │   └── database.ts
+│   ├── utils/            # Utility functions
+│   │   ├── jwt.ts
+│   │   └── constants.ts
+│   ├── app.ts            # Express app setup
+│   └── index.ts          # Entry point
+├── .env                  # Environment variables
+├── package.json          # Dependencies and scripts
+├── tsconfig.json         # TypeScript configuration
+└── README.md             # Documentation (this file)
+```
+
+## Setup and Installation
+
+### Prerequisites
 
 - Node.js (v14+)
-- PostgreSQL (v12+)
-- npm or yarn
+- PostgreSQL
 
-## Setup Instructions
+### Local Setup
 
 1. Clone the repository:
 
@@ -23,16 +66,15 @@ cd user-access-management-system/backend
 npm install
 ```
 
-3. Set up environment variables:
-   Create a `.env` file in the root directory with the following content:
+3. Create a `.env` file in the backend directory:
 
 ```
 PORT=3001
-JWT_SECRET=your_secret_key_here
+JWT_SECRET=your_jwt_secret_key
 DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres
-DB_PASSWORD=your_postgres_password
+DB_PASSWORD=your_password
 DB_DATABASE=user_access_management
 ```
 
@@ -48,64 +90,107 @@ CREATE DATABASE user_access_management;
 npm run dev
 ```
 
-For production:
+### Docker Setup
+
+1. Build the Docker image:
 
 ```bash
-npm run build
-npm start
+docker build -t uams-backend .
 ```
 
-The server will start on http://localhost:3001.
-
-## Troubleshooting Common Errors
-
-### TypeScript Compilation Errors
-
-If you get TypeScript compilation errors, try:
+2. Run the container:
 
 ```bash
-npm run typecheck
+docker run -p 3001:3001 -d uams-backend
 ```
 
-This will show you all type checking errors without emitting any files.
+## Database Initialization
 
-### Database Connection Issues
+The application will create database tables on first run, but you'll need to create an admin user manually.
 
-- Make sure PostgreSQL is running
-- Check that your database credentials in `.env` are correct
-- You might need to create the database manually: `CREATE DATABASE user_access_management;`
+You can run the provided SQL script to set up initial test data:
 
-### JWT Authentication Issues
+```bash
+psql -U postgres -d user_access_management < seed.sql
+```
 
-- Check that your JWT_SECRET is properly set in `.env`
-- Ensure you're including the token in the Authorization header as: `Bearer <token>`
+Or manually run these SQL commands:
+
+```sql
+INSERT INTO "user" (username, password, role, email, "fullName", "createdAt")
+VALUES
+('admin', '$2b$10$zZZ/J69hE.FP0zxO3cOKbefUiCt0J2VJxA9xEVoAS5UKBGSGqF7v6', 'Admin', 'admin@example.com', 'System Administrator', CURRENT_TIMESTAMP),
+('manager', '$2b$10$HwSOBvxAVlkF4q/U3QlZ5.D7WwJHzxmjY8NrA1zvqGb2bRVGwGDfG', 'Manager', 'manager@example.com', 'Team Manager', CURRENT_TIMESTAMP),
+('employee', '$2b$10$IFpjhH/rN6e2OTt9TS2CtONRNBUAM9r5q1wMJf.IdwLql2jQEygoy', 'Employee', 'employee@example.com', 'Regular Employee', CURRENT_TIMESTAMP);
+```
+
+These accounts have the following passwords:
+
+- admin: admin123
+- manager: password123
+- employee: password123
 
 ## API Endpoints
 
 ### Authentication
 
-- `POST /api/auth/signup` - Register a new user (default role: Employee)
-  - Body: `{ username, password, email, fullName }`
-- `POST /api/auth/login` - Login and receive JWT token
-  - Body: `{ username, password }`
-- `GET /api/auth/me` - Get current user details (requires authentication)
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user
 
-### Software Management
+### Software Management (Admin)
 
-- `GET /api/software` - Get all software (requires authentication)
-- `GET /api/software/:id` - Get software by ID (requires authentication)
-- `POST /api/software` - Create new software (Admin only)
-  - Body: `{ name, description, accessLevels }`
-- `PUT /api/software/:id` - Update software (Admin only)
-  - Body: `{ name, description, accessLevels }`
-- `DELETE /api/software/:id` - Delete software (Admin only)
+- `GET /api/software` - Get all software
+- `GET /api/software/:id` - Get software by ID
+- `POST /api/software` - Add new software
+- `PUT /api/software/:id` - Update software
+- `DELETE /api/software/:id` - Delete software
 
 ### Access Requests
 
-- `POST /api/requests` - Create a new access request (Employee, Manager, Admin)
-  - Body: `{ softwareId, accessType, reason }`
-- `GET /api/requests/my-requests` - Get user's requests (requires authentication)
-- `GET /api/requests/:id` - Get request by ID (requires authentication)
-- `GET /api/requests/pending` - Get all pending requests (Manager, Admin only)
-- `PATCH /api/requests/:id/status` - Update request status (Manager, Admin only)
-  - Body: `{ status, reviewComment }`
+- `POST /api/requests` - Submit access request
+- `GET /api/requests/my-requests` - Get user's requests
+- `GET /api/requests/pending` - Get all pending requests (Managers only)
+- `GET /api/requests/:id` - Get request by ID
+- `PATCH /api/requests/:id/status` - Approve or reject request (Managers only)
+
+## Testing
+
+You can use tools like Postman or curl to test the API endpoints.
+
+### Example API Test with curl
+
+Login:
+
+```bash
+curl -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+```
+
+Create software (with auth token):
+
+```bash
+curl -X POST http://localhost:3001/api/software \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"name":"Microsoft Office","description":"Office productivity suite","accessLevels":["Read","Write","Admin"]}'
+```
+
+## Building for Production
+
+To compile TypeScript to JavaScript for production:
+
+```bash
+npm run build
+```
+
+This creates a `dist` directory with the compiled code. To run the production build:
+
+```bash
+npm start
+```
+
+## License
+
+This project is licensed under the MIT License.
