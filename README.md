@@ -1,6 +1,6 @@
 # User Access Management System
 
-![User Access Management System Screenshot](https://i.imgur.com/example-screenshot.png)
+![User Access Management System Screenshot](./frontend//public/image.png)
 
 A comprehensive system for managing user registrations, software access requests, and managerial approvals. This application supports role-based authentication with JWT, access request submission and approval workflows, and software management.
 
