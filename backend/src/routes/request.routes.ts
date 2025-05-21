@@ -12,13 +12,16 @@ import { isEmployee, isManager } from "../middleware/role.middleware";
 
 const router = Router();
 
-// Employee routes
+// Manager routes - only users with Manager or Admin role can access
+// IMPORTANT: Place specific routes BEFORE parameterized routes to avoid conflicts
+router.get("/pending", authMiddleware, isManager, getPendingRequests);
+
+// Employee routes - any authenticated user with Employee role or higher can access
 router.post("/", authMiddleware, isEmployee, createRequest);
 router.get("/my-requests", authMiddleware, isEmployee, getUserRequests);
-router.get("/:id", authMiddleware, isEmployee, getRequestById);
 
-// Manager routes
-router.get("/pending", authMiddleware, isManager, getPendingRequests);
+// IMPORTANT: Always put parameterized routes LAST
+router.get("/:id", authMiddleware, isEmployee, getRequestById);
 router.patch("/:id/status", authMiddleware, isManager, updateRequestStatus);
 
 export default router;

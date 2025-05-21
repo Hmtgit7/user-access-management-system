@@ -33,9 +33,13 @@ export const createRequest = async (
     const userRepository = getRepository(User);
     const requestRepository = getRepository(AccessRequest);
 
+    // Convert softwareId to number if it's a string
+    const softwareIdNum =
+      typeof softwareId === "string" ? parseInt(softwareId, 10) : softwareId;
+
     // Check if software exists
     const software = await softwareRepository.findOne({
-      where: { id: softwareId },
+      where: { id: softwareIdNum },
     });
     if (!software) {
       res.status(404).json({ message: "Software not found" });
@@ -44,11 +48,9 @@ export const createRequest = async (
 
     // Check if software supports requested access level
     if (!software.accessLevels.includes(accessType)) {
-      res
-        .status(400)
-        .json({
-          message: `Software does not support ${accessType} access level`,
-        });
+      res.status(400).json({
+        message: `Software does not support ${accessType} access level`,
+      });
       return;
     }
 
@@ -63,7 +65,7 @@ export const createRequest = async (
     const existingRequest = await requestRepository.findOne({
       where: {
         userId: userId,
-        softwareId: softwareId,
+        softwareId: softwareIdNum,
         accessType: accessType,
         status: "Pending",
       },
@@ -77,7 +79,7 @@ export const createRequest = async (
     // Create new request
     const newRequest = requestRepository.create({
       userId,
-      softwareId,
+      softwareId: softwareIdNum,
       accessType,
       reason,
       status: "Pending",
@@ -120,8 +122,20 @@ export const getPendingRequests = async (
   res: Response
 ): Promise<void> => {
   try {
+    // Check if user is authorized (must be Manager or Admin)
+    const userRole = req.user?.role;
+    if (!userRole || !["Manager", "Admin"].includes(userRole)) {
+      res
+        .status(403)
+        .json({
+          message: "You don't have permission to view pending requests",
+        });
+      return;
+    }
+
     const requestRepository = getRepository(AccessRequest);
 
+    // Get all pending requests with their relations
     const requests = await requestRepository.find({
       where: { status: "Pending" },
       relations: ["software", "user"],
@@ -129,15 +143,49 @@ export const getPendingRequests = async (
 
     // Remove sensitive information from user objects
     const sanitizedRequests = requests.map((request) => {
-      const { user, ...rest } = request;
+      // Make sure user exists before trying to destructure it
+      if (!request.user) {
+        return {
+          ...request,
+          user: {
+            id: null,
+            username: "Unknown User",
+            fullName: "",
+            email: "",
+            role: "",
+          },
+        };
+      }
+
+      // Make sure software exists before referencing it
+      if (!request.software) {
+        return {
+          ...request,
+          user: {
+            id: request.user.id,
+            username: request.user.username,
+            fullName: request.user.fullName || "",
+            email: request.user.email || "",
+            role: request.user.role,
+          },
+          software: {
+            id: null,
+            name: "Unknown Software",
+            description: "",
+            accessLevels: [],
+          },
+        };
+      }
+
+      // Normal case when both user and software exist
       return {
-        ...rest,
+        ...request,
         user: {
-          id: user.id,
-          username: user.username,
-          fullName: user.fullName,
-          email: user.email,
-          role: user.role,
+          id: request.user.id,
+          username: request.user.username,
+          fullName: request.user.fullName || "",
+          email: request.user.email || "",
+          role: request.user.role,
         },
       };
     });
@@ -157,8 +205,15 @@ export const getRequestById = async (
     const { id } = req.params;
     const requestRepository = getRepository(AccessRequest);
 
+    // Check if id is a valid number
+    const requestId = parseInt(id);
+    if (isNaN(requestId)) {
+      res.status(400).json({ message: "Invalid request ID format" });
+      return;
+    }
+
     const request = await requestRepository.findOne({
-      where: { id: parseInt(id) },
+      where: { id: requestId },
       relations: ["software", "user"],
     });
 
@@ -181,16 +236,21 @@ export const getRequestById = async (
       return;
     }
 
+    // Handle possible null or undefined user
+    if (!request.user) {
+      res.status(500).json({ message: "Request data is incomplete" });
+      return;
+    }
+
     // Remove sensitive information from user object
-    const { user, ...rest } = request;
     const sanitizedRequest = {
-      ...rest,
+      ...request,
       user: {
-        id: user.id,
-        username: user.username,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
+        id: request.user.id,
+        username: request.user.username,
+        fullName: request.user.fullName || "",
+        email: request.user.email || "",
+        role: request.user.role,
       },
     };
 
@@ -232,6 +292,12 @@ export const updateRequestStatus = async (
 
     if (request.status !== "Pending") {
       res.status(400).json({ message: "Request has already been processed" });
+      return;
+    }
+
+    // Handle possible null or undefined user or software
+    if (!request.user || !request.software) {
+      res.status(500).json({ message: "Request data is incomplete" });
       return;
     }
 

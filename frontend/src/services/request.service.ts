@@ -31,41 +31,66 @@ export interface UpdateRequestStatusData {
 
 const RequestService = {
   createRequest: async (data: CreateRequestData): Promise<Request> => {
-    const response = await api.post<{ request: Request; message: string }>(
-      "/requests",
-      data
-    );
-    return response.data.request;
+    try {
+      const response = await api.post<{ request: Request; message: string }>(
+        "/requests",
+        data
+      );
+      return response.data.request;
+    } catch (error) {
+      console.error("Create request error:", error);
+      throw error;
+    }
   },
 
   getUserRequests: async (): Promise<Request[]> => {
-    const response = await api.get<{ requests: Request[] }>(
-      "/requests/my-requests"
-    );
-    return response.data.requests;
+    try {
+      const response = await api.get<{ requests: Request[] }>(
+        "/requests/my-requests"
+      );
+      return response.data.requests;
+    } catch (error) {
+      console.error("Get user requests error:", error);
+      throw error;
+    }
   },
 
   getPendingRequests: async (): Promise<Request[]> => {
-    const response = await api.get<{ requests: Request[] }>(
-      "/requests/pending"
-    );
-    return response.data.requests;
+    try {
+      const response = await api.get<{ requests: Request[] }>(
+        "/requests/pending"
+      );
+      return response.data.requests;
+    } catch (error) {
+      console.error("Get pending requests error:", error);
+      throw error;
+    }
   },
 
   getRequestById: async (id: number): Promise<Request> => {
-    const response = await api.get<{ request: Request }>(`/requests/${id}`);
-    return response.data.request;
+    try {
+      const response = await api.get<{ request: Request }>(`/requests/${id}`);
+      return response.data.request;
+    } catch (error) {
+      console.error("Get request by ID error:", error);
+      throw error;
+    }
   },
 
   updateRequestStatus: async (
     id: number,
     data: UpdateRequestStatusData
   ): Promise<Request> => {
-    const response = await api.patch<{ request: Request; message: string }>(
-      `/requests/${id}/status`,
-      data
-    );
-    return response.data.request;
+    try {
+      const response = await api.patch<{ request: Request; message: string }>(
+        `/requests/${id}/status`,
+        data
+      );
+      return response.data.request;
+    } catch (error) {
+      console.error("Update request status error:", error);
+      throw error;
+    }
   },
 };
 

@@ -76,8 +76,23 @@ const RequestAccessPage: React.FC = () => {
                 setError(null);
                 setSuccess(null);
 
+                // Convert softwareId to number
+                const softwareId = parseInt(values.softwareId, 10);
+
+                // Validate that it's a valid number
+                if (isNaN(softwareId)) {
+                    setError('Invalid software ID');
+                    return;
+                }
+
+                // Validate accessType is one of the allowed values
+                if (!['Read', 'Write', 'Admin'].includes(values.accessType)) {
+                    setError('Invalid access type');
+                    return;
+                }
+
                 await RequestService.createRequest({
-                    softwareId: parseInt(values.softwareId),
+                    softwareId: softwareId,
                     accessType: values.accessType as 'Read' | 'Write' | 'Admin',
                     reason: values.reason
                 });

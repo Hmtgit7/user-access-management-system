@@ -1,15 +1,23 @@
-// backend/src/middleware/role.middleware.ts
+// src/middleware/role.middleware.ts
 import { Request, Response, NextFunction } from "express";
 
 type Role = "Employee" | "Manager" | "Admin";
 
 export const roleMiddleware = (allowedRoles: Role[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
+    // Check if user object exists
     if (!req.user) {
       res.status(401).json({ message: "Authentication required" });
       return;
     }
 
+    // Check if role property exists
+    if (!req.user.role) {
+      res.status(403).json({ message: "User role not specified" });
+      return;
+    }
+
+    // Check if user has one of the allowed roles
     if (!allowedRoles.includes(req.user.role as Role)) {
       res.status(403).json({ message: "Insufficient permissions" });
       return;

@@ -1,4 +1,4 @@
-// backend/src/utils/jwt.ts
+// src/utils/jwt.ts
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
@@ -19,8 +19,22 @@ export const generateToken = (payload: TokenPayload): string => {
 
 export const verifyToken = (token: string): TokenPayload => {
   try {
-    return jwt.verify(token, JWT_SECRET) as TokenPayload;
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Validate that the decoded token has the expected shape
+    if (
+      typeof decoded === "object" &&
+      decoded !== null &&
+      "userId" in decoded &&
+      "username" in decoded &&
+      "role" in decoded
+    ) {
+      return decoded as TokenPayload;
+    }
+
+    throw new Error("Invalid token payload structure");
   } catch (error) {
+    console.error("Token verification error:", error);
     throw new Error("Invalid token");
   }
 };

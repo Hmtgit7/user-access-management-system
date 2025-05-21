@@ -163,7 +163,7 @@ const DashboardPage: React.FC = () => {
                           <ListItemText
                             primary={
                               <Box className="flex items-center justify-between">
-                                <span>{request.software.name}</span>
+                                <span>{request.software?.name || 'Unknown Software'}</span>
                                 <Chip
                                   size="small"
                                   label={request.status}
@@ -187,14 +187,25 @@ const DashboardPage: React.FC = () => {
                                 >
                                   Access Level: {request.accessType}
                                 </Typography>
-                                <Typography
-                                  component="span"
-                                  variant="body2"
-                                  className="flex items-center text-gray-500 mt-1"
-                                >
+
+                                {/* Use span instead of div here to fix the hydration error */}
+                                <span className="flex items-center text-gray-500 mt-1">
                                   <AccessTime fontSize="small" className="mr-1" />
                                   {new Date(request.createdAt).toLocaleDateString()}
-                                </Typography>
+                                </span>
+
+                                {/* Move Chip components outside of Typography */}
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, marginTop: 1 }}>
+                                  {request.accessType && (
+                                    <Chip
+                                      key={request.accessType}
+                                      size="small"
+                                      label={request.accessType}
+                                      className="mr-1 mt-1"
+                                      variant="outlined"
+                                    />
+                                  )}
+                                </Box>
                               </>
                             }
                           />

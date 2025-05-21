@@ -57,11 +57,21 @@ const PendingRequestsPage: React.FC = () => {
             setLoading(true);
             setError(null);
 
+            // Debugging
+            console.log("Fetching pending requests...");
+
             const pendingRequests = await RequestService.getPendingRequests();
-            setRequests(pendingRequests);
+            console.log("Received requests:", pendingRequests);
+
+            // Filter out any invalid requests that might cause issues
+            const validRequests = pendingRequests.filter(req =>
+                req && typeof req.id === 'number'
+            );
+
+            setRequests(validRequests);
         } catch (err: any) {
+            console.error("Fetch pending requests error:", err);
             setError(err.response?.data?.message || 'Failed to load pending requests. Please try again.');
-            console.error('Fetch pending requests error:', err);
         } finally {
             setLoading(false);
         }
@@ -110,11 +120,11 @@ const PendingRequestsPage: React.FC = () => {
                 setSuccess(null);
             }, 5000);
         } catch (err: any) {
+            console.error(`${dialogType} request error:`, err);
             setError(
                 err.response?.data?.message ||
                 `Failed to ${dialogType} request. Please try again.`
             );
-            console.error(`${dialogType} request error:`, err);
         } finally {
             setActionLoading(false);
         }
@@ -133,9 +143,14 @@ const PendingRequestsPage: React.FC = () => {
         setPage(0);
     };
 
-    // Format date string
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleString();
+    // Format date string safely
+    const formatDate = (dateString: string | undefined) => {
+        if (!dateString) return 'Unknown date';
+        try {
+            return new Date(dateString).toLocaleString();
+        } catch (err) {
+            return 'Invalid date';
+        }
     };
 
     return (
@@ -210,10 +225,17 @@ const PendingRequestsPage: React.FC = () => {
                                             .map((request) => (
                                                 <TableRow key={request.id} hover>
                                                     <TableCell>
-                                                        <div className="font-medium">{request.user.username}</div>
-                                                        <div className="text-xs text-gray-500">{request.user.role}</div>
+                                                        {/* Use conditional rendering with optional chaining */}
+                                                        <Typography variant="body2" component="div" className="font-medium">
+                                                            {request.user?.username || 'Unknown'}
+                                                        </Typography>
+                                                        <Typography variant="caption" component="div" className="text-gray-500">
+                                                            {request.user?.role || ''}
+                                                        </Typography>
                                                     </TableCell>
-                                                    <TableCell>{request.software.name}</TableCell>
+                                                    <TableCell>
+                                                        {request.software?.name || 'Unknown Software'}
+                                                    </TableCell>
                                                     <TableCell>
                                                         <Chip
                                                             label={request.accessType}
@@ -230,12 +252,12 @@ const PendingRequestsPage: React.FC = () => {
                                                     </TableCell>
                                                     <TableCell>
                                                         <Box className="flex items-center">
-                                                            <div className="truncate max-w-xs">
-                                                                {request.reason.length > 30
+                                                            <Typography variant="body2" component="div" className="truncate max-w-xs">
+                                                                {request.reason && request.reason.length > 30
                                                                     ? `${request.reason.substring(0, 30)}...`
-                                                                    : request.reason}
-                                                            </div>
-                                                            <Tooltip title={request.reason}>
+                                                                    : request.reason || 'No reason provided'}
+                                                            </Typography>
+                                                            <Tooltip title={request.reason || 'No reason provided'}>
                                                                 <IconButton size="small">
                                                                     <InfoOutlined fontSize="small" />
                                                                 </IconButton>
@@ -245,7 +267,9 @@ const PendingRequestsPage: React.FC = () => {
                                                     <TableCell>
                                                         <Box className="flex items-center text-gray-500">
                                                             <AccessTime fontSize="small" className="mr-1" />
-                                                            {formatDate(request.createdAt)}
+                                                            <Typography variant="body2" component="span">
+                                                                {formatDate(request.createdAt)}
+                                                            </Typography>
                                                         </Box>
                                                     </TableCell>
                                                     <TableCell align="right">
@@ -308,8 +332,8 @@ const PendingRequestsPage: React.FC = () => {
                         <>
                             <DialogContentText className="mb-4">
                                 {dialogType === 'approve'
-                                    ? `Are you sure you want to approve ${selectedRequest.user.username}'s request for ${selectedRequest.accessType} access to ${selectedRequest.software.name}?`
-                                    : `Are you sure you want to reject ${selectedRequest.user.username}'s request for ${selectedRequest.accessType} access to ${selectedRequest.software.name}?`}
+                                    ? `Are you sure you want to approve ${selectedRequest.user?.username || 'Unknown'}'s request for ${selectedRequest.accessType} access to ${selectedRequest.software?.name || 'Unknown Software'}?`
+                                    : `Are you sure you want to reject ${selectedRequest.user?.username || 'Unknown'}'s request for ${selectedRequest.accessType} access to ${selectedRequest.software?.name || 'Unknown Software'}?`}
                             </DialogContentText>
 
                             <TextField

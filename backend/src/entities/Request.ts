@@ -55,5 +55,5 @@ export class Request {
   reviewedBy: number | null;
 
   @Column({ type: "text", nullable: true })
-  reviewComment: string;
+  reviewComment: string | null;
 }
