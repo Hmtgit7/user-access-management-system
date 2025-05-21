@@ -178,8 +178,10 @@ const DashboardPage: React.FC = () => {
                                 />
                               </Box>
                             }
+                            // Fix: Restructuring the secondary prop to avoid nesting div inside p
                             secondary={
-                              <>
+                              <React.Fragment>
+                                {/* First line of secondary text as span */}
                                 <Typography
                                   component="span"
                                   variant="body2"
@@ -188,28 +190,26 @@ const DashboardPage: React.FC = () => {
                                   Access Level: {request.accessType}
                                 </Typography>
 
-                                {/* Use span instead of div here to fix the hydration error */}
-                                <span className="flex items-center text-gray-500 mt-1">
-                                  <AccessTime fontSize="small" className="mr-1" />
-                                  {new Date(request.createdAt).toLocaleDateString()}
-                                </span>
-
-                                {/* Move Chip components outside of Typography */}
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, marginTop: 1 }}>
-                                  {request.accessType && (
-                                    <Chip
-                                      key={request.accessType}
-                                      size="small"
-                                      label={request.accessType}
-                                      className="mr-1 mt-1"
-                                      variant="outlined"
-                                    />
-                                  )}
+                                {/* Second line with time icon as standalone div outside of Typography */}
+                                <Box component="span" className="flex items-center text-gray-500 mt-1">
+                                  <AccessTime fontSize="small" style={{ marginRight: '4px' }} />
+                                  <span>{new Date(request.createdAt).toLocaleDateString()}</span>
                                 </Box>
-                              </>
+                              </React.Fragment>
                             }
                           />
                         </ListItem>
+                        {/* Chip moved out of ListItemText's secondary prop */}
+                        {request.accessType && (
+                          <Box sx={{ pl: 2, pb: 1 }}>
+                            <Chip
+                              size="small"
+                              label={request.accessType}
+                              className="mr-1 mt-1"
+                              variant="outlined"
+                            />
+                          </Box>
+                        )}
                       </React.Fragment>
                     ))}
                   </List>
@@ -254,8 +254,9 @@ const DashboardPage: React.FC = () => {
                                 <span>{sw.name}</span>
                               </Box>
                             }
+                            // Fix: Restructuring the secondary prop to avoid nesting div inside p
                             secondary={
-                              <>
+                              <React.Fragment>
                                 <Typography
                                   component="span"
                                   variant="body2"
@@ -263,21 +264,22 @@ const DashboardPage: React.FC = () => {
                                 >
                                   {sw.description}
                                 </Typography>
-                                <Box className="mt-1">
-                                  {sw.accessLevels.map(level => (
-                                    <Chip
-                                      key={level}
-                                      size="small"
-                                      label={level}
-                                      className="mr-1 mt-1"
-                                      variant="outlined"
-                                    />
-                                  ))}
-                                </Box>
-                              </>
+                              </React.Fragment>
                             }
                           />
                         </ListItem>
+                        {/* Access levels chips moved outside of ListItemText secondary */}
+                        <Box sx={{ pl: 2, pb: 1 }}>
+                          {sw.accessLevels.map(level => (
+                            <Chip
+                              key={level}
+                              size="small"
+                              label={level}
+                              className="mr-1 mt-1"
+                              variant="outlined"
+                            />
+                          ))}
+                        </Box>
                       </React.Fragment>
                     ))}
                   </List>
